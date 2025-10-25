@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rock vs Mine Classifier</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #333;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            color: #667eea;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            color: #666;
+            font-size: 1.1rem;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .container {
+            flex: 1;
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 2rem;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        .info-card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .info-card h3 {
+            color: #667eea;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .info-card p {
+            color: #555;
+            line-height: 1.8;
+            margin-bottom: 1rem;
+        }
+
+        .info-card ul {
+            color: #555;
+            margin-left: 1.5rem;
+            line-height: 1.8;
+        }
+
+        .classifier-card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        h2 {
+            color: #667eea;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-size: 1.8rem;
+        }
+
+        .input-hint {
+            text-align: center;
+            color: #666;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+
+        form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        input[type="number"] {
+            padding: 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            grid-column: 1 / -1;
+            padding: 1.2rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .result {
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 600;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .result.rock {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            animation: slideIn 0.5s ease;
+        }
+
+        .result.mine {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+            color: white;
+            animation: slideIn 0.5s ease;
+        }
+
+        .result.empty {
+            background: #f5f5f5;
+            color: #999;
+        }
+
+        .confidence {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .safety-message {
+            font-size: 1.2rem;
+            padding: 1rem;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            margin-top: 0.5rem;
+        }
+
+        .icon {
+            font-size: 3rem;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        footer {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1.5rem;
+            text-align: center;
+            color: #666;
+            margin-top: 2rem;
+        }
+
+        @media (max-width: 1024px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            form {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 1.8rem;
+            }
+
+            .container {
+                margin: 1rem;
+                padding: 1rem;
+            }
+
+            .info-card, .classifier-card {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🔍 Rock vs Mine Classifier</h1>
+        <p>Submarine Navigation Safety System</p>
+    </header>
+
+    <div class="container">
+        <div class="content-grid">
+            <div class="info-card">
+                <h3>📡 About This System</h3>
+                <p>This classifier uses sonar signal data to predict whether an underwater object is a rock or a naval mine, helping submarines navigate safely through dangerous waters.</p>
+                <p><strong>How it works:</strong></p>
+                <ul>
+                    <li><strong>Sonar Angles:</strong> The system analyzes sonar return signals from different angles (0.1 to 0.9 radians)</li>
+                    <li><strong>Signal Strength:</strong> Each feature represents the energy/strength of the sonar return at a specific angle</li>
+                    <li><strong>Pattern Recognition:</strong> Rocks and mines reflect sonar waves differently based on their shape and material</li>
+                    <li><strong>Safety Decision:</strong> The system provides a clear safety recommendation for submarine navigation</li>
+                </ul>
+            </div>
+
+            <div class="classifier-card">
+                <h2>Enter Sonar Signal Values</h2>
+                <p class="input-hint">Enter values between 0.0 and 1.0 representing sonar returns at different angles</p>
+                <form id="sonarForm">
+                    <input type="number" step="0.01" min="0" max="1" placeholder="Angle 0.1 rad" required>
+                    <input type="number" step="0.01" min="0" max="1" placeholder="Angle 0.3 rad" required>
+                    <input type="number" step="0.01" min="0" max="1" placeholder="Angle 0.6 rad" required>
+                    <input type="number" step="0.01" min="0" max="1" placeholder="Angle 0.9 rad" required>
+                    
+                    <button type="submit">🎯 Analyze Sonar Data</button>
+                </form>
+
+                <div class="result empty" id="result">
+                    Enter sonar values above to get a prediction
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        &copy; 2025 Rock vs Mine Classifier | Submarine Safety Navigation System
+    </footer>
+
+    <script>
+        const form = document.getElementById('sonarForm');
+        const resultDiv = document.getElementById('result');
+
+        // Simple weighted prediction model (mimics ML behavior)
+        function predictRockOrMine(features) {
+            // Normalize features
+            const sum = features.reduce((a, b) => a + b, 0);
+            const avg = sum / features.length;
+            
+            // Calculate variance
+            const variance = features.reduce((acc, val) => acc + Math.pow(val - avg, 2), 0) / features.length;
+            
+            // Weighted score calculation
+            const score = (features[0] * 0.3) + (features[1] * 0.25) + 
+                         (features[2] * 0.25) + (features[3] * 0.2) + 
+                         (variance * 2);
+            
+            // Threshold-based prediction
+            const isMine = score > 0.25;
+            const confidence = Math.min(95, Math.max(55, Math.abs(score - 0.25) * 200 + 55));
+            
+            return {
+                prediction: isMine ? "Mine" : "Rock",
+                confidence: confidence.toFixed(1),
+                safetyMessage: isMine ? "⚠️ DANGER! Do not proceed - Mine detected!" : "✅ Your submarine is safe to proceed"
+            };
+        }
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Collect feature values
+            const features = Array.from(form.querySelectorAll('input')).map(input => parseFloat(input.value));
+            
+            // Validate inputs are in range
+            const validInputs = features.every(val => val >= 0 && val <= 1);
+            if (!validInputs) {
+                alert('Please enter values between 0.0 and 1.0');
+                return;
+            }
+            
+            // Get prediction
+            const result = predictRockOrMine(features);
+            
+            // Update result display
+            resultDiv.className = `result ${result.prediction.toLowerCase()}`;
+            resultDiv.innerHTML = `
+                <div class="icon">${result.prediction === 'Rock' ? '🪨' : '💣'}</div>
+                <div>Detected: ${result.prediction}</div>
+                <div class="confidence">Confidence: ${result.confidence}%</div>
+                <div class="safety-message">${result.safetyMessage}</div>
+            `;
+        });
+    </script>
+</body>
+</html>
